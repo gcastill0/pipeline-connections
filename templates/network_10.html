@@ -1,0 +1,37 @@
+<h1>Confirm Identity and Grant Access</h1>
+<div class="row">
+  <div class="column">
+    <p>Use the provider</p>
+    <pre><code class="terraform">
+      provider "vault" {
+        address = var.MAPPED_VAULT_ADDR
+      
+        auth_login {
+          path = "auth/approle/login"
+      
+          parameters = {
+            role_id   = var.MAPPED_ROLE_ID
+            secret_id = var.MAPPED_SECRET_ID
+          }
+        }
+      }
+    </code></pre>
+    <p>Request <Datag></Datag>
+    </p>
+    <pre><code class="terraform">
+      data "vault_generic_secret" "az_auth" {
+        path = "secret/ado/env_creds"
+      }             
+      </code></pre>
+  </div>
+  <div class="column">
+    <div class="polaroid">
+      <img src="img/network_09.png" alt="Generic picture">
+      <div class="container">
+        <p>Connect directly from Terraform to Vault</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>

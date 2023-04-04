@@ -1,0 +1,58 @@
+<h1>Create Project Workspace</h1>
+<div class="row">
+    <div class="column">
+        <p>Derive naming convention from the metadata, or create it dynamically.</p>
+        <pre><code class="shell">
+            if [ -z "$(TFE_WORKSPACE)" ]; then
+              echo "Setting workspace id dynamically"
+              a=$BUILD_DEFINITIONNAME
+              b=$BUILD_BUILDNUMBER
+              TFE_WORKSPACE=${a// /_}"-"${b//[ |\.]/_}
+            fi
+            
+            cat << EOF > create_ws.json {
+                "data": {
+                "attributes": {
+                    "name": "$TFE_WORKSPACE",
+                    "auto-apply": "true"
+                    },
+                "type": "workspaces"
+                }
+            }
+            EOF
+        </code></pre>
+        <p>Make initial API call to Terraform to create workspace.</p>
+        <pre><code class="shell">
+            RESPONSE=$(curl -k -s \
+            --header "Authorization: Bearer $(TFE_TOKEN)" \
+            --header "Content-Type: application/vnd.api+json" \
+            --request POST \
+            --data @create_ws.json \
+            $(TFE_HOST)/api/v2/organizations/$(TFE_ORG)/workspaces)        
+        </code></pre>
+    </div>
+
+    <div class="column">
+        <p>Store secrets in pipeline variables.</p>
+        <pre><code class="shell">
+            WORKSPACE_ID=$(echo $RESPONSE | jq '.data.id' | tr -d '"')
+            
+            if [ "$WORKSPACE_ID" == null ]; then
+              ERROR=$(echo $RESPONSE | jq '.errors[0].detail')
+              echo "Error in creating workspace $TFE_WORKSPACE: "$ERROR 2>&1
+              exit 1
+            else
+              echo "##vso[task.setvariable variable=WORKSPACE_ID]$WORKSPACE_ID"
+              exit 0
+            fi       
+        </code></pre>
+        <div class="polaroid">
+            <img src="img/network_03.png" alt="Generic picture">
+            <div class="container">
+                <p>Obtain Workspace ID</p>
+            </div>
+        </div>
+
+    </div>
+
+</div>

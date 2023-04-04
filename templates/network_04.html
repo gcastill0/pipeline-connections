@@ -1,0 +1,62 @@
+<h1>Populate Workspace Variables</h1>
+<div class="row">
+    <div class="column">
+        <p>Declare a list variables need to be uploaded to the Terraform workspace.</p>
+        <pre><code class="shell">
+            declare -a environment_vars=("ARM_CLIENT_ID" \
+                                         "ARM_CLIENT_SECRET" \
+                                         "ARM_SUBSCRIPTION_ID" \
+                                         "ARM_TENANT_ID")      
+        </code></pre>
+        <p>Iterate through the list to create the variables.</p>
+        <pre><code class="shell">
+            for var in ${environment_vars[@]}; 
+            do 
+              echo $var" "$(printenv $var) 
+              cat << EOF > create_var.json
+              {
+                "data": {
+                  "type": "vars",
+                  "attributes": {
+                    "key": "$var",
+                    "value": $(printenv $var),
+                    "category": "env",
+                    "hcl": false,
+                    "sensitive": true
+                  },
+                  "relationships": {
+                    "workspace": {
+                      "data": {
+                        "id": "$(WORKSPACE_ID)",
+                        "type": "workspaces"
+                      }
+                    }
+                  }
+                }
+              }
+            EOF
+            </code></pre>
+    </div>
+
+    <div class="column">
+        <pre><code class="shell">
+            RESPONSE=$(curl -k -s \
+              --header "Authorization: Bearer $(TFE_TOKEN)" \
+              --header "Content-Type: application/vnd.api+json" \
+              --request POST \
+              --data @create_var.json \
+              $(TFE_HOST)/api/v2/vars)
+          
+            rm -f create_var.json
+          done
+      </code></pre>
+        <div class="polaroid">
+            <img src="img/network_04.png" alt="Generic picture">
+            <div class="container">
+                <p>Create variables in new workspace</p>
+            </div>
+        </div>
+
+    </div>
+
+</div>

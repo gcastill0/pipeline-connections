@@ -1,0 +1,77 @@
+<div class="row">
+    <div class="column">
+        <p>Azure Platform Access Credentials</p>
+        <pre><code class="json">
+            ### creds.json 
+            {
+              "ARM_CLIENT_ID":"e6581bf3-****-****-****-0******462c"
+              "ARM_CLIENT_SECRET":"*******.*******.*******.***.0MQA7k"
+              "ARM_SUBSCRIPTION_ID":"14692f20-****-****-****-4******9c2a"
+              "ARM_TENANT_ID":"0e3e2e88--****-****-****-1******c52ec"
+            }
+            ###
+        </code></pre>
+        <p>ACL Policy for Secrets</p>
+        <pre><code class="terraform">
+            ### ado-pipeline.hcl
+            # Read-only permission on 'secret/data/ado*' path
+            path "secret/data/ado/*" {
+              capabilities = [ "read" ]
+            }
+            
+            # Read-only permission on 'secret/ado*' path
+            path "secret/ado/*" {
+              capabilities = [ "read" ]
+            }
+            
+            path "auth/token/create" {
+              capabilities = ["create", "read", "update", "delete", "list"]
+            }
+            ###
+        </code></pre>
+        <p>Vault Commands to Create Secrets Path</p>
+        <pre><code class="terraform">
+            vault secrets enable -path=secret kv 
+            vault kv enable-versioning secret/
+            vault kv put secret/ado/env_creds @creds.json
+            vault policy write ado-pipeline ado-pipeline.hcl
+        </code></pre>
+    </div>
+    <div class="column">
+        <p>AppRole for Trusted Orchestrator</p>
+        <pre><code class="json">
+            vault policy write ado-pipeline ado-pipeline.hcl
+            vault auth enable approle
+            vault write auth/approle/role/ado-pipeline token_policies="ado-pipeline"
+        </code></pre>
+        <p>Create Role ID and Secret ID</p>
+        <pre><code class="terraform">
+            vault read auth/approle/role/ado-pipeline/role-id
+            Key        Value
+            ---        -----
+            role_id    a63e71a7-7fb6-17a9-13ca-db8a730dbd98
+            
+            vault write -f auth/approle/role/ado-pipeline/secret-id
+            Key                   Value
+            ---                   -----
+            secret_id             a8d8a9e6-e213-9f0c-98f7-d9f94fe0ef29
+            secret_id_accessor    9fe32cb5-bff3-1ae9-cc94-8470dd312f51
+        </code></pre>
+        <p>Test Role ID and Secret ID</p>
+        <pre><code class="terraform">
+            vault write auth/approle/login role_id="a63e71a7-7fb6-17a9-13ca-db8a730dbd98" \
+            secret_id="a8d8a9e6-e213-9f0c-98f7-d9f94fe0ef29"
+
+            Key                     Value
+            ---                     -----
+            token                   s.XBrGNVaUwiilEQq9AYjWrQ8P
+            token_accessor          KHzawbe35DnxzXyfrTmDcNsB
+            token_duration          768h
+            token_renewable         true
+            token_policies          ["ado-pipeline" "default"]
+            identity_policies       []
+            policies                ["ado-pipeline" "default"]
+            token_meta_role_name    ado-pipeline
+        </code></pre>
+    </div>
+</div>

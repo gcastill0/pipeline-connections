@@ -1,0 +1,47 @@
+<h1>Build Infrastructure</h1>
+<div class="row">
+  <div class="column1a">
+    <p>Prepare the desired attributes for the run.</p>
+    <pre><code class="shell">
+      cat << EOF > tfe_run.json
+      {
+        "data": {
+          "attributes": {
+            "is-destroy":false
+          },
+          "type":"runs",
+          "relationships": {
+            "workspace": {
+              "data": {
+                "type": "workspaces",
+                "id": "$(WORKSPACE_ID)"
+              }
+            }
+          }
+        }
+      }
+      EOF  
+      </code></pre>
+    <p>Request run in Terraform</p>
+    <pre><code class="shell">
+      RESULT=$(curl -s \
+      --header "Authorization: Bearer $(TFE_TOKEN)" \
+      --header "Content-Type: application/vnd.api+json" \
+      --data @tfe_run.json \
+      $(TFE_HOST)/api/v2/runs)
+      
+    RUN_ID=$(echo  $RESULT | jq '.data.id' | tr -d '"')       
+        </code></pre>
+
+  </div>
+  <div class="column1b">
+    <div class="polaroid">
+      <img src="img/network_05.png" alt="Generic picture">
+      <div class="container">
+        <p>Run a Plan in Terraform</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>

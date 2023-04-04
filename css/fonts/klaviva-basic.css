@@ -1,0 +1,27 @@
+@font-face {
+    font-family: 'Klavika Basic';
+    src: url('KlavikaBasic-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Klavika Basic';
+    src: url('KlavikaBasic-RegularItalic.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Klavika Basic';
+    src: url('KlavikaBasic-Bold.woff') format('woff');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Klavika Basic';
+    src: url('KlavikaBasic-BoldItalic.woff') format('woff');
+    font-weight: 600;
+    font-style: italic;
+}

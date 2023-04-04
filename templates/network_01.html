@@ -1,0 +1,50 @@
+<h1>Acquire Pipeline Secrets</h1>
+<div class="row">
+    <div class="column">
+        <p>Authenticate with Vault server. Note the MAPPED variables from the localized variable group in ADO. The
+            pipeline cannot use secrets directly and the code must map with localized runtime variables for use</p>
+        <pre><code class="bash">
+            RESPONSE=$(curl -k -s \
+            --request POST \
+            --data "{\"role_id\": \"$MAPPED_ROLE_ID\", \
+                     \"secret_id\": \="$MAPPED_SECRET_ID\"}" \
+            $MAPPED_VAULT_ADDR/v1/auth/approle/login)      
+        </code></pre>
+        <p>Handle session token and use to obtain secrets.</p>
+        <pre><code class="bash">
+            # echo $RESPONSE | jq
+    
+            VAULT_TOKEN=$(echo $RESPONSE | jq '.auth.client_token' | tr -d '"')
+            
+            SECRETS=$(curl -k -s \
+                      --header "X-Vault-Token: $VAULT_TOKEN" \
+                      $MAPPED_VAULT_ADDR/v1/secret/data/ado/env_creds)
+        </code></pre>
+
+        <p>Store secrets in pipeline variables.</p>
+        <pre><code class="bash">
+            ARM_CLIENT_ID="$(echo $SECRETS | jq '.data.data.ARM_CLIENT_ID')"
+            echo "##vso[task.setvariable variable=ARM_CLIENT_ID]$ARM_CLIENT_ID"
+        
+            ARM_CLIENT_SECRET="$(echo $SECRETS | jq '.data.data.ARM_CLIENT_SECRET')"
+            echo "##vso[task.setvariable variable=ARM_CLIENT_SECRET]$ARM_CLIENT_SECRET"
+        
+            ARM_SUBSCRIPTION_ID="$(echo $SECRETS | jq '.data.data.ARM_SUBSCRIPTION_ID')"
+            echo "##vso[task.setvariable variable=ARM_SUBSCRIPTION_ID]$ARM_SUBSCRIPTION_ID"
+        
+            ARM_TENANT_ID="$(echo $SECRETS | jq '.data.data.ARM_TENANT_ID')"
+            echo "##vso[task.setvariable variable=ARM_TENANT_ID]$ARM_TENANT_ID"
+        </code></pre>
+    </div>
+
+    <div class="column">
+        <div class="polaroid">
+            <img src="img/network_01.png" alt="Generic picture">
+            <div class="container">
+                <p>Prepare Target Platform Access Credentials</p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
